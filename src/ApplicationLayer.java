@@ -40,7 +40,7 @@ public class ApplicationLayer implements Layer{
         byteBuffer.put(ipBytes).put(Integer.valueOf(fileNameBytes.length).byteValue()).put(fileNameBytes).put(byteFile);
 
         //transfere a la couche de transport en dessous
-        transportLayer.sendToLowerLayer(this.fileBuffer);
+        transportLayer.getFromHigherLayer(this.fileBuffer);
     }
 
         @Override
@@ -60,7 +60,7 @@ public class ApplicationLayer implements Layer{
     }
 
     @Override
-    public void getFromHigherLayer() {
+    public void getFromHigherLayer(byte[] buffer) {
         System.err.println("Cannot send to a higher Layer");
     }
 
