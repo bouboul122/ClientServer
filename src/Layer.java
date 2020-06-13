@@ -4,5 +4,5 @@ public interface Layer {
     public void getFromLowerLayer();
     public void sendToHigherLayer();
     public void getFromHigherLayer();
-    
+
 }
