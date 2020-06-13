@@ -26,24 +26,16 @@ public class ApplicationLayer implements Layer{
 
         //trouver le  nom de fichier en bytes
         byte[] fileNameBytes = packetInfo[0].getBytes();
-        byte nameLength = Integer.valueOf(fileNameBytes.length).byteValue();
-
 
         //Lire tout le fichier en byte
         byte[] byteFile = Files.readAllBytes(Paths.get(packetInfo[0]));
 
         //Combiner tout les arrays de bytes pour pouvoir envoyer a la couche de transport
-        byte[] totalBytes = new byte[ipBytes.length + 1 + fileNameBytes.length + byteFile.length];
-
+        this.fileBuffer = new byte[ipBytes.length + 1 + fileNameBytes.length + byteFile.length];
         // Le byte buffer permet de tout inserer les differents arrays de bytes dans un array total.
         //Le + 1 est inserer pour prendre en compte la grandeur du nom.
-        ByteBuffer byteBuffer = ByteBuffer.wrap(totalBytes);
-        byteBuffer.put(ipBytes).put(nameLength).put(fileNameBytes).put(byteFile);
-        System.out.println(byteBuffer.array().length);
-        for (int i = 0; i<byteBuffer.array().length; i++){
-            System.out.println(byteBuffer.array()[i]);
-        }
-
+        ByteBuffer byteBuffer = ByteBuffer.wrap(this.fileBuffer);
+        byteBuffer.put(ipBytes).put(Integer.valueOf(fileNameBytes.length).byteValue()).put(fileNameBytes).put(byteFile);
     }
 
         @Override
