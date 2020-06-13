@@ -1,6 +1,8 @@
+import java.io.IOException;
+
 public interface Layer {
 
-    void sendToLowerLayer();
+    void sendToLowerLayer(byte[] buffer) throws IOException;
     void getFromLowerLayer();
     void sendToHigherLayer();
     void getFromHigherLayer();
