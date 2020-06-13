@@ -2,14 +2,16 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class ApplicationLayer implements Layer{
 
     String filePath;
     byte[] fileBuffer;
+    Layer transportLayer;
+
+    public ApplicationLayer(Layer transportLayer){
+        this.transportLayer = transportLayer;
+    }
 
     @Override
     public void sendToLowerLayer(byte[] buffer) throws IOException {
@@ -36,6 +38,9 @@ public class ApplicationLayer implements Layer{
         //Le + 1 est inserer pour prendre en compte la grandeur du nom.
         ByteBuffer byteBuffer = ByteBuffer.wrap(this.fileBuffer);
         byteBuffer.put(ipBytes).put(Integer.valueOf(fileNameBytes.length).byteValue()).put(fileNameBytes).put(byteFile);
+
+        //transfere a la couche de transport en dessous
+        transportLayer.sendToLowerLayer(this.fileBuffer);
     }
 
         @Override

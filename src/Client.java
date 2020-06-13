@@ -5,7 +5,8 @@ public class Client {
 
     public static void main(String[] args) throws IOException {
 
-        ApplicationLayer applicationLayer = new ApplicationLayer();
+        TransportLayer transportLayer = new TransportLayer();
+        ApplicationLayer applicationLayer = new ApplicationLayer(transportLayer);
 
         if (args.length == 0){
             System.err.println("File not found");
