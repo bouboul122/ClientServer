@@ -28,5 +28,6 @@ public class QuoteClient {
         System.out.println("Quote of the Moment: " + received);
 
         socket.close();
+
     }
 }
