@@ -62,9 +62,6 @@ public class ApplicationLayer implements Layer{
             System.out.println("An error occurred.");
             e.printStackTrace();
         }
-
-
-
     }
 
     @Override
