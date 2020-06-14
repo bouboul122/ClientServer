@@ -24,7 +24,7 @@ public class DataLinkLayer implements Layer{
     public void getFromLowerLayer(byte[] buffer) throws IOException {
 
     }
-    
+
 
     @Override
     public void sendToHigherLayer() {
