@@ -9,6 +9,7 @@ public class TransportLayer implements Layer{
     static final int PORT = 25000;
     ArrayList<byte[]> dataPackets;
     byte[] destinationIp;
+    byte[] sourceIp;
     byte[] fileName;
     byte[] allData;
     byte fileNameLength;
@@ -20,10 +21,11 @@ public class TransportLayer implements Layer{
     @Override
     public void getFromHigherLayer(byte[] buffer) throws IOException {
         this.destinationIp = Arrays.copyOfRange(buffer, 0, 4);
-        this.fileNameLength = buffer[4];
-        this.fileName = Arrays.copyOfRange(buffer, 5, 5 + Byte.valueOf(this.fileNameLength).intValue());
-        this.allData = Arrays.copyOfRange(buffer, 5 + Byte.valueOf(this.fileNameLength).intValue(), buffer.length);
-        createPackets();
+        this.sourceIp = Arrays.copyOfRange(buffer, 4, 8);
+        this.fileNameLength = buffer[8];
+        this.fileName = Arrays.copyOfRange(buffer, 9, 9 + Byte.valueOf(this.fileNameLength).intValue());
+        this.allData = Arrays.copyOfRange(buffer, 9 + Byte.valueOf(this.fileNameLength).intValue(), buffer.length);
+        sendToLowerLayer(allData);
     }
 
     public void createPackets(){
@@ -35,10 +37,11 @@ public class TransportLayer implements Layer{
         String portStr = String.valueOf(PORT);
         String maxPackets = intToStr(numOfPackets, 5);
         String destinationStr = new String(this.destinationIp);
+        String sourceDestinationStr = new String(this.sourceIp);
 
         while (counter < numOfPackets){
             String counterStr = intToStr(counter, 5);
-            packetHeaderStr = destinationStr+','+portStr+','+counterStr+','+maxPackets;
+            packetHeaderStr = destinationStr+','+sourceDestinationStr+','+portStr+','+counterStr+','+maxPackets;
             if (counter == 0){
                 packetBodyStr = fileNameStr;
             }
@@ -68,7 +71,11 @@ public class TransportLayer implements Layer{
 
     @Override
     public void sendToLowerLayer(byte[] buffer) throws IOException {
-
+        createPackets();
+        for (int i=0; i<dataPackets.size();i++){
+            //DataLinkLayer.getFromHigherLayer
+            System.out.println("Sending packet number " + i);
+        }
     }
 
     @Override
@@ -83,5 +90,12 @@ public class TransportLayer implements Layer{
 
     public void sendMissedPacketNotice(int packetNumber){
 
+    }
+
+    public void createMissedPacketNotice(int packetNumber){
+        String missedPacketStr = "MISSED PACKET";
+        String missedPacketNumber = intToStr(packetNumber, 5);
+        String packetHeaderStr = missedPacketStr + ','+missedPacketNumber;
+        byte[] missedPacketHeader = packetHeaderStr.getBytes();
     }
 }

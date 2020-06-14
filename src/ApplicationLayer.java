@@ -9,8 +9,9 @@ public class ApplicationLayer implements Layer{
     String filePath;
     byte[] fileBuffer;
     byte[] fileNameBytes;
-    byte[] ipBytes;
-    byte[]byteFile;
+    byte[] ipDestinationBytes = new byte[4];
+    byte[] ipSourceBytes = new byte[4];
+    byte[] byteFile;
     Layer transportLayer;
 
     public ApplicationLayer(Layer transportLayer){
@@ -19,12 +20,14 @@ public class ApplicationLayer implements Layer{
 
     @Override
     public void sendToLowerLayer(byte[] buffer) throws IOException {
-        String[] packetInfo = new String(buffer).split("\n");
+        String[] packetInfo = new String(buffer).split(";");
         this.filePath = packetInfo[0];
 
+        //trouver l'adresse destination et la transformer en byte
+        getIpAdressInBytes(packetInfo[1], this.ipDestinationBytes);
 
-        //trouver l'adresse et la transformer en byte
-        getDestinationIpAdressInBytes(packetInfo[1]);
+        //trouver l'adresse source et la transformer en byte
+        getIpAdressInBytes(packetInfo[2], this.ipSourceBytes);
 
         //trouver le  nom de fichier en bytes
         getFileNameInBytes(packetInfo[0]);
@@ -33,22 +36,37 @@ public class ApplicationLayer implements Layer{
         getAllFileBytes(packetInfo[0]);
 
         //Combiner tout les arrays de bytes pour pouvoir envoyer a la couche de transport
-        this.fileBuffer = new byte[this.ipBytes.length + 1 + this.fileNameBytes.length + this.byteFile.length];
+
+            this.fileBuffer = new byte[this.ipDestinationBytes.length + this.ipSourceBytes.length + 1 +
+                this.fileNameBytes.length + this.byteFile.length];
+
+        /*
+        this.fileBuffer = new byte[this.ipDestinationBytes.length + 1 +
+                this.fileNameBytes.length + this.byteFile.length];
+         */
+
         // Le byte buffer permet de tout inserer les differents arrays de bytes dans un array total.
         //Le + 1 est inserer pour prendre en compte la grandeur du nom.
         ByteBuffer byteBuffer = ByteBuffer.wrap(this.fileBuffer);
-        byteBuffer.put(this.ipBytes).put(Integer.valueOf(this.fileNameBytes.length).byteValue()).put(this.fileNameBytes).put(byteFile);
+
+            byteBuffer.put(this.ipDestinationBytes).put(this.ipSourceBytes).put(Integer.valueOf(this.fileNameBytes.length)
+                .byteValue()).put(this.fileNameBytes).put(byteFile);
+
+        /*
+        byteBuffer.put(this.ipDestinationBytes).put(Integer.valueOf(this.fileNameBytes.length)
+                .byteValue()).put(this.fileNameBytes).put(byteFile);
+
+         */
 
         //System.out.println(Arrays.toString(this.fileBuffer));
         //transfere a la couche de transport en dessous
         transportLayer.getFromHigherLayer(this.fileBuffer);
     }
 
-    public void getDestinationIpAdressInBytes(String ipAdress){
+    public void getIpAdressInBytes(String ipAdress, byte[] adress){
         String[] ipAdressDestination = ipAdress.split("\\.");
-        this.ipBytes = new byte[4];
         for (int i = 0; i < 4;i++) {
-            ipBytes[i] = Integer.valueOf(ipAdressDestination[i]).byteValue();
+            adress[i] = Integer.valueOf(ipAdressDestination[i]).byteValue();
         }
     }
 
