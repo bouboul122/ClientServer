@@ -72,7 +72,7 @@ public class TransportLayer implements Layer{
     }
 
     @Override
-    public void getFromLowerLayer() {
+    public void getFromLowerLayer(byte[] buffer) throws IOException{
 
     }
 

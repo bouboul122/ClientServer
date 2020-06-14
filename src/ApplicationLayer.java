@@ -22,6 +22,7 @@ public class ApplicationLayer implements Layer{
         String[] packetInfo = new String(buffer).split("\n");
         this.filePath = packetInfo[0];
 
+
         //trouver l'adresse et la transformer en byte
         getDestinationIpAdressInBytes(packetInfo[1]);
 
@@ -60,13 +61,21 @@ public class ApplicationLayer implements Layer{
     }
 
     @Override
-    public void getFromLowerLayer() {
+    public void getFromLowerLayer(byte [] buffer) throws IOException {
 
-            try(BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(this.filePath))) {
-                String fileContent = "This is a sample text.";
-                bufferedWriter.write(fileContent);
-            } catch (IOException e) {
-            }
+        String[] body = new String(buffer).split(";");
+
+        try {
+            FileWriter myWriter = new FileWriter("C:\\Users\\jordl\\OneDrive - USherbrooke\\S3\\APP3\\"+new String(body[0]));
+            myWriter.write(new String (body[1]));
+            myWriter.close();
+            System.out.println("Successfully wrote to the file.");
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+
+
 
     }
 

@@ -19,8 +19,10 @@ public class Client {
             System.out.println("Sending to " + args[1]);
             byte[] buffer = (filePath + "\n" + destination).getBytes();
 
-            applicationLayer.sendToLowerLayer(buffer);
-
+            byte[] bufferByte = ("one-liners.txt;Life is wonderful. Without it we'd all be dead.").getBytes();
+            //applicationLayer.sendToLowerLayer(buffer);
+            System.out.println("-----------------------------");
+            applicationLayer.getFromLowerLayer(bufferByte);
         }
 
 
