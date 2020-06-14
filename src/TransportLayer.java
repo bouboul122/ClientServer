@@ -25,7 +25,7 @@ public class TransportLayer implements Layer{
        this.ipDestination = ipDestination;
        int numOfPackets = (int) Math.floor(this.allData.length/MAXPACKETINTSIZE) + 1;
        System.out.println(numOfPackets);
-       //createPackets(numOfPackets);
+       createPackets(numOfPackets);
     }
 
     public void createPackets(int numOfPackets){
@@ -33,30 +33,27 @@ public class TransportLayer implements Layer{
 
         String packetBodyStr;
         String packetHeaderStr;
-        String fileNameStr = new String(this.fileName);
         String portStr = String.valueOf(PORT);
         String maxPackets = intToStr(numOfPackets, 5);
         String ipDestinationStr = new String(this.ipDestination);
 
         while (counter < numOfPackets){
             String counterStr = intToStr(counter, 5);
-            packetHeaderStr = ipDestinationStr+','+portStr+','+counterStr+','+maxPackets;
-            if (counter == 0){
-                packetBodyStr = fileNameStr;
-            }
-            else if (((counter-1)*200 + 200 )< this.allData.length){
-                packetBodyStr = new String(Arrays.copyOfRange(this.allData, (counter-1)*200, (counter-1)*200 + 200));
+            packetHeaderStr = ipDestinationStr+","+portStr+","+counterStr+","+maxPackets+";";
+
+            if (((counter)*200 + 200 )< this.allData.length){
+                packetBodyStr = new String(Arrays.copyOfRange(this.allData, (counter)*200, (counter)*200 + 200));
             }
             else{
-                packetBodyStr = new String(Arrays.copyOfRange(this.allData, (counter-1)*200, this.allData.length));
+                packetBodyStr = new String(Arrays.copyOfRange(this.allData, (counter)*200, this.allData.length));
             }
+
             counter += 1;
-            String packetStr = packetHeaderStr+';'+packetBodyStr;
-            byte[] packet = new byte[packetStr.length()];
+            byte[] packet = new byte[packetHeaderStr.getBytes().length + packetBodyStr.getBytes().length];
             ByteBuffer packetBuffer = ByteBuffer.wrap(packet);
-            packetBuffer.put(packetStr.getBytes());
-            dataPackets.add(packet);
-            //System.out.println(Arrays.toString(packet));
+            packetBuffer.put(packetHeaderStr.getBytes()).put(packetBodyStr.getBytes());
+            //dataPackets.add(packet);
+            System.out.println(Arrays.toString(packet));
         }
     }
 

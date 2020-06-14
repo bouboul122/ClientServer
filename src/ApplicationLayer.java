@@ -7,7 +7,6 @@ import java.util.Arrays;
 public class ApplicationLayer implements Layer{
 
     byte[] filePath;
-    byte[] fileNameBytes;
     byte[] ipDestination;
     byte[] byteFile;
     Layer transportLayer;
@@ -31,11 +30,11 @@ public class ApplicationLayer implements Layer{
         //adressIP en byte
 
         //creer le buffer de byte
-        //byte[] bytesToSend = new byte[1 + this.byteFile.length + this.fileNameBytes.length];
-        //ByteBuffer bytesToSendBuffer = ByteBuffer.wrap(bytesToSend);
-        //bytesToSendBuffer.put(fileNameLength).put(fileNameBytes).put(byteFile);
+        byte[] bytesToSend = new byte[1 + this.byteFile.length + this.filePath.length];
+        ByteBuffer bytesToSendBuffer = ByteBuffer.wrap(bytesToSend);
+        bytesToSendBuffer.put(fileNameLength).put(filePath).put(byteFile);
         //transfere a la couche de transport en dessous
-        //transportLayer.getFromHigherLayer(this.fileNameBytes, ipDestination, 0);
+        transportLayer.getFromHigherLayer(bytesToSend, ipDestination, 0);
     }
 
     public void getIpAdressInBytes(String ipAdress, byte[] adress){
@@ -43,10 +42,6 @@ public class ApplicationLayer implements Layer{
         for (int i = 0; i < 4;i++) {
             adress[i] = Integer.valueOf(ipAdressDestination[i]).byteValue();
         }
-    }
-
-    public void getFileNameInBytes(String fileName){
-        this.fileNameBytes = fileName.getBytes();
     }
 
     public void getAllFileBytes(String fileName) throws IOException {
@@ -59,7 +54,7 @@ public class ApplicationLayer implements Layer{
         String[] body = new String(buffer).split(";");
 
         try {
-            FileWriter myWriter = new FileWriter("C:\\Users\\jordl\\OneDrive - USherbrooke\\S3\\APP3\\"+new String(body[0]));
+            FileWriter myWriter = new FileWriter("C:\\Users\\ludov\\OneDrive - USherbrooke\\ete2020\\APP3\\"+new String(body[0]));
             myWriter.write(new String (body[1]));
             myWriter.close();
             System.out.println("Successfully wrote to the file.");

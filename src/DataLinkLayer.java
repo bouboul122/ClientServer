@@ -3,7 +3,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.zip.CRC32;
 
-/*
+
 public class DataLinkLayer implements Layer{
     byte[] homemadePacket;
     byte[] homemadePacketHeader;
@@ -21,9 +21,10 @@ public class DataLinkLayer implements Layer{
     }
 
     @Override
-    public void getFromLowerLayer() {
+    public void getFromLowerLayer(byte[] buffer) throws IOException {
 
     }
+    
 
     @Override
     public void sendToHigherLayer() {
@@ -56,4 +57,3 @@ public class DataLinkLayer implements Layer{
 
     }
 }
-*/
