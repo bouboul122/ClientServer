@@ -6,9 +6,9 @@ import java.util.Arrays;
 
 public class ApplicationLayer implements Layer{
 
-    String filePath;
+    byte[] filePath;
     byte[] fileNameBytes;
-    String ipDestination;
+    byte[] ipDestination;
     byte[] byteFile;
     Layer transportLayer;
 
@@ -17,25 +17,25 @@ public class ApplicationLayer implements Layer{
     }
 
     @Override
-    public void sendToLowerLayer(byte[] buffer, String ipDestination, int toPort) throws IOException {
-        String[] packetInfo = new String(buffer).split(";");
-        this.filePath = packetInfo[0];
+    public void sendToLowerLayer(byte[] filePath, byte[] ipDestination, int toPort) throws IOException {
+        this.filePath = filePath;
         this.ipDestination = ipDestination;
 
         //trouver le  nom de fichier en bytes
-        getFileNameInBytes(packetInfo[0]);
         //Trouve la longueur du fichier
-        byte fileNameLength = Integer.valueOf(packetInfo[0].length()).byteValue();
+        byte fileNameLength = Integer.valueOf(filePath.length).byteValue();
 
         //Lire le fichier
-        getAllFileBytes(packetInfo[0]);
+        getAllFileBytes(new String(filePath));
+
+        //adressIP en byte
 
         //creer le buffer de byte
-        byte[] bytesToSend = new byte[1 + this.byteFile.length + this.fileNameBytes.length];
-        ByteBuffer bytesToSendBuffer = ByteBuffer.wrap(bytesToSend);
-        bytesToSendBuffer.put(fileNameLength).put(fileNameBytes).put(byteFile);
+        //byte[] bytesToSend = new byte[1 + this.byteFile.length + this.fileNameBytes.length];
+        //ByteBuffer bytesToSendBuffer = ByteBuffer.wrap(bytesToSend);
+        //bytesToSendBuffer.put(fileNameLength).put(fileNameBytes).put(byteFile);
         //transfere a la couche de transport en dessous
-        transportLayer.getFromHigherLayer(this.fileNameBytes, packetInfo[1], 0);
+        //transportLayer.getFromHigherLayer(this.fileNameBytes, ipDestination, 0);
     }
 
     public void getIpAdressInBytes(String ipAdress, byte[] adress){
@@ -54,13 +54,21 @@ public class ApplicationLayer implements Layer{
     }
 
     @Override
-    public void getFromLowerLayer() {
+    public void getFromLowerLayer(byte [] buffer) throws IOException {
 
-            try(BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(this.filePath))) {
-                String fileContent = "This is a sample text.";
-                bufferedWriter.write(fileContent);
-            } catch (IOException e) {
-            }
+        String[] body = new String(buffer).split(";");
+
+        try {
+            FileWriter myWriter = new FileWriter("C:\\Users\\jordl\\OneDrive - USherbrooke\\S3\\APP3\\"+new String(body[0]));
+            myWriter.write(new String (body[1]));
+            myWriter.close();
+            System.out.println("Successfully wrote to the file.");
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+
+
 
     }
 
@@ -70,11 +78,8 @@ public class ApplicationLayer implements Layer{
     }
 
     @Override
-    public void getFromHigherLayer(byte[] buffer, String ipDestination, int port) {
+    public void getFromHigherLayer(byte[] buffer, byte[] ipDestination, int port) {
         System.err.println("Cannot send to a higher Layer");
     }
 
-    public void setFilePath(String filePath){
-        this.filePath = filePath;
-    }
 }

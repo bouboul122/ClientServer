@@ -9,7 +9,7 @@ public class TransportLayer implements Layer{
     static final int MAXPACKETINTSIZE = 200;
     static final int PORT = 25000;
     ArrayList<byte[]> dataPackets;
-    String ipDestination;
+    byte[] ipDestination;
     byte[] sourceIp;
     byte[] fileName;
     byte[] allData;
@@ -20,7 +20,7 @@ public class TransportLayer implements Layer{
     }
 
     @Override
-    public void getFromHigherLayer(byte[] buffer, String ipDestination, int port) throws IOException {
+    public void getFromHigherLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException {
        this.allData = buffer;
        this.ipDestination = ipDestination;
        int numOfPackets = (int) Math.floor(this.allData.length/MAXPACKETINTSIZE) + 1;
@@ -36,11 +36,11 @@ public class TransportLayer implements Layer{
         String fileNameStr = new String(this.fileName);
         String portStr = String.valueOf(PORT);
         String maxPackets = intToStr(numOfPackets, 5);
-        String sourceDestinationStr = new String(this.sourceIp);
+        String ipDestinationStr = new String(this.ipDestination);
 
         while (counter < numOfPackets){
             String counterStr = intToStr(counter, 5);
-            packetHeaderStr = this.ipDestination+','+sourceDestinationStr+','+portStr+','+counterStr+','+maxPackets;
+            packetHeaderStr = ipDestinationStr+','+portStr+','+counterStr+','+maxPackets;
             if (counter == 0){
                 packetBodyStr = fileNameStr;
             }
@@ -69,7 +69,7 @@ public class TransportLayer implements Layer{
     }
 
     @Override
-    public void sendToLowerLayer(byte[] buffer, String ipDestination, int port) throws IOException {
+    public void sendToLowerLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException {
         //createPackets();
         //this.lowerLayer.getFromHigherLayer(dataPackets.get(0));
         /*
@@ -81,7 +81,7 @@ public class TransportLayer implements Layer{
     }
 
     @Override
-    public void getFromLowerLayer() {
+    public void getFromLowerLayer(byte[] buffer) throws IOException{
 
     }
 

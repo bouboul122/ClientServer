@@ -13,16 +13,20 @@ public class Client {
             System.err.println("File not found");
         } else {
 
-            String filePath = args[0];
             System.out.println("Reading " + args[0]);
             String destination = args[1];
             System.out.println("Sending to " + args[1]);
             String source = args[2];
             System.out.println("Sending from " + source);
-            byte[] buffer = (filePath + ";" + destination + ";" + source).getBytes();
+            byte[] ipDestination = args[1].getBytes();
+            byte[] filePath = args[0].getBytes();
 
-            applicationLayer.sendToLowerLayer(buffer, args[2], 0);
+            applicationLayer.sendToLowerLayer(filePath, ipDestination, 0);
 
+
+            byte[] bufferByte = ("one-liners.txt;Life is wonderful. Without it we'd all be dead.").getBytes();
+            System.out.println("-----------------------------");
+//            applicationLayer.getFromLowerLayer(bufferByte);
         }
 
 
