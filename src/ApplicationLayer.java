@@ -10,9 +10,11 @@ public class ApplicationLayer implements Layer{
     byte[] ipDestination;
     byte[] byteFile;
     Layer transportLayer;
+    int fromPort;
 
-    public ApplicationLayer(Layer transportLayer){
-        this.transportLayer = transportLayer;
+    public ApplicationLayer(int port){
+        transportLayer = new TransportLayer();
+        this.fromPort = port;
     }
 
     @Override
