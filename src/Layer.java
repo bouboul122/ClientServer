@@ -5,6 +5,6 @@ public interface Layer {
     void sendToLowerLayer(byte[] buffer) throws IOException;
     void getFromLowerLayer();
     void sendToHigherLayer();
-    void getFromHigherLayer(byte[] buffer);
+    void getFromHigherLayer(byte[] buffer) throws IOException;
 
 }
