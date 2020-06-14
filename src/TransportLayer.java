@@ -5,10 +5,11 @@ import java.util.Arrays;
 
 public class TransportLayer implements Layer{
 
+    //Layer lowerLayer = new DataLinkLayer();
     static final int MAXPACKETINTSIZE = 200;
     static final int PORT = 25000;
     ArrayList<byte[]> dataPackets;
-    byte[] destinationIp;
+    String ipDestination;
     byte[] sourceIp;
     byte[] fileName;
     byte[] allData;
@@ -19,29 +20,27 @@ public class TransportLayer implements Layer{
     }
 
     @Override
-    public void getFromHigherLayer(byte[] buffer) throws IOException {
-        this.destinationIp = Arrays.copyOfRange(buffer, 0, 4);
-        this.sourceIp = Arrays.copyOfRange(buffer, 4, 8);
-        this.fileNameLength = buffer[8];
-        this.fileName = Arrays.copyOfRange(buffer, 9, 9 + Byte.valueOf(this.fileNameLength).intValue());
-        this.allData = Arrays.copyOfRange(buffer, 9 + Byte.valueOf(this.fileNameLength).intValue(), buffer.length);
-        sendToLowerLayer(allData);
+    public void getFromHigherLayer(byte[] buffer, String ipDestination, int port) throws IOException {
+       this.allData = buffer;
+       this.ipDestination = ipDestination;
+       int numOfPackets = (int) Math.floor(this.allData.length/MAXPACKETINTSIZE) + 1;
+       System.out.println(numOfPackets);
+       //createPackets(numOfPackets);
     }
 
-    public void createPackets(){
+    public void createPackets(int numOfPackets){
         int counter = 0;
-        int numOfPackets = (int) Math.floor(this.allData.length/MAXPACKETINTSIZE) + 2;
+
         String packetBodyStr;
         String packetHeaderStr;
         String fileNameStr = new String(this.fileName);
         String portStr = String.valueOf(PORT);
         String maxPackets = intToStr(numOfPackets, 5);
-        String destinationStr = new String(this.destinationIp);
         String sourceDestinationStr = new String(this.sourceIp);
 
         while (counter < numOfPackets){
             String counterStr = intToStr(counter, 5);
-            packetHeaderStr = destinationStr+','+sourceDestinationStr+','+portStr+','+counterStr+','+maxPackets;
+            packetHeaderStr = this.ipDestination+','+sourceDestinationStr+','+portStr+','+counterStr+','+maxPackets;
             if (counter == 0){
                 packetBodyStr = fileNameStr;
             }
@@ -57,7 +56,7 @@ public class TransportLayer implements Layer{
             ByteBuffer packetBuffer = ByteBuffer.wrap(packet);
             packetBuffer.put(packetStr.getBytes());
             dataPackets.add(packet);
-            System.out.println(Arrays.toString(packet));
+            //System.out.println(Arrays.toString(packet));
         }
     }
 
@@ -70,12 +69,15 @@ public class TransportLayer implements Layer{
     }
 
     @Override
-    public void sendToLowerLayer(byte[] buffer) throws IOException {
-        createPackets();
+    public void sendToLowerLayer(byte[] buffer, String ipDestination, int port) throws IOException {
+        //createPackets();
+        //this.lowerLayer.getFromHigherLayer(dataPackets.get(0));
+        /*
         for (int i=0; i<dataPackets.size();i++){
             //DataLinkLayer.getFromHigherLayer
-            System.out.println("Sending packet number " + i);
+            //System.out.println("Sending packet number " + i);
         }
+        */
     }
 
     @Override
@@ -88,6 +90,17 @@ public class TransportLayer implements Layer{
 
     }
 
+    public void sendACKPacquet(){
+
+    }
+
+    public void createACKpacquet(int packetNumber){
+        String ackMessage = "RECEIVED";
+        String ackNumber = intToStr(packetNumber, 5);
+        String ackPacketHeaderStr = ackMessage+','+ackNumber;
+        byte[] ackPacketHeader = ackPacketHeaderStr.getBytes();
+    }
+
     public void sendMissedPacketNotice(int packetNumber){
 
     }
@@ -95,7 +108,7 @@ public class TransportLayer implements Layer{
     public void createMissedPacketNotice(int packetNumber){
         String missedPacketStr = "MISSED PACKET";
         String missedPacketNumber = intToStr(packetNumber, 5);
-        String packetHeaderStr = missedPacketStr + ','+missedPacketNumber;
+        String packetHeaderStr = missedPacketStr+','+missedPacketNumber;
         byte[] missedPacketHeader = packetHeaderStr.getBytes();
     }
 }

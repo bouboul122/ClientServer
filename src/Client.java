@@ -21,7 +21,7 @@ public class Client {
             System.out.println("Sending from " + source);
             byte[] buffer = (filePath + ";" + destination + ";" + source).getBytes();
 
-            applicationLayer.sendToLowerLayer(buffer);
+            applicationLayer.sendToLowerLayer(buffer, args[2], 0);
 
         }
 
