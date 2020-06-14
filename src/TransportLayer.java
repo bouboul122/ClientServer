@@ -39,7 +39,7 @@ public class TransportLayer implements Layer{
 
         while (counter < numOfPackets){
             String counterStr = intToStr(counter, 5);
-            packetHeaderStr = ipDestinationStr+","+portStr+","+counterStr+","+maxPackets+";";
+            packetHeaderStr = counterStr+","+maxPackets+";";
 
             if (((counter)*200 + 200 )< this.allData.length){
                 packetBodyStr = new String(Arrays.copyOfRange(this.allData, (counter)*200, (counter)*200 + 200));
