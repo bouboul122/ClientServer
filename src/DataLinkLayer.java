@@ -36,10 +36,9 @@ public class DataLinkLayer implements Layer{
         this.homemadePacket = buffer;
         String bufferStr = new String(homemadePacket);
         String newPacketHeader = bufferStr.split(";")[0] + ",";
-        System.out.println(newPacketHeader);
         this.homemadePacketHeader = newPacketHeader.getBytes();
         this.homemadePacketBody = bufferStr.split(";")[1].getBytes();
-        addCRC();
+        //addCRC();
 
     }
 

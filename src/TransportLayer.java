@@ -5,7 +5,7 @@ import java.util.Arrays;
 
 public class TransportLayer implements Layer{
 
-    //Layer lowerLayer = new DataLinkLayer();
+    Layer lowerLayer = new DataLinkLayer();
     static final int MAXPACKETINTSIZE = 200;
     static final int PORT = 25000;
     ArrayList<byte[]> dataPackets;
@@ -26,6 +26,7 @@ public class TransportLayer implements Layer{
        int numOfPackets = (int) Math.floor(this.allData.length/MAXPACKETINTSIZE) + 1;
        System.out.println(numOfPackets);
        createPackets(numOfPackets);
+       sendToLowerLayer(buffer, ipDestination, port);
     }
 
     public void createPackets(int numOfPackets){
@@ -52,8 +53,10 @@ public class TransportLayer implements Layer{
             byte[] packet = new byte[packetHeaderStr.getBytes().length + packetBodyStr.getBytes().length];
             ByteBuffer packetBuffer = ByteBuffer.wrap(packet);
             packetBuffer.put(packetHeaderStr.getBytes()).put(packetBodyStr.getBytes());
-            //dataPackets.add(packet);
-            System.out.println(Arrays.toString(packet));
+            dataPackets.add(packet);
+        }
+        for (byte[] packetToString : dataPackets){
+            System.out.println(Arrays.toString(packetToString));
         }
     }
 
@@ -67,14 +70,10 @@ public class TransportLayer implements Layer{
 
     @Override
     public void sendToLowerLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException {
-        //createPackets();
-        //this.lowerLayer.getFromHigherLayer(dataPackets.get(0));
-        /*
+        this.lowerLayer.getFromHigherLayer(dataPackets.get(0), ipDestination, port);
         for (int i=0; i<dataPackets.size();i++){
-            //DataLinkLayer.getFromHigherLayer
-            //System.out.println("Sending packet number " + i);
+            System.out.println("Sending packet number " + i);
         }
-        */
     }
 
     @Override
