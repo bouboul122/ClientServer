@@ -9,11 +9,11 @@ public class ApplicationLayer implements Layer{
     byte[] filePath;
     byte[] ipDestination;
     byte[] byteFile;
-    Layer transportLayer;
+    Layer downwardLayer;
     int fromPort;
 
     public ApplicationLayer(int port){
-        transportLayer = new TransportLayer();
+        downwardLayer = new TransportLayer(this);
         this.fromPort = port;
     }
 
@@ -36,7 +36,7 @@ public class ApplicationLayer implements Layer{
         ByteBuffer bytesToSendBuffer = ByteBuffer.wrap(bytesToSend);
         bytesToSendBuffer.put(fileNameLength).put(filePath).put(byteFile);
         //transfere a la couche de transport en dessous
-        transportLayer.getFromHigherLayer(bytesToSend, ipDestination, 0);
+        downwardLayer.getFromHigherLayer(bytesToSend, ipDestination, 0);
     }
 
     public void getIpAdressInBytes(String ipAdress, byte[] adress){

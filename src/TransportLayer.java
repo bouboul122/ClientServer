@@ -5,7 +5,8 @@ import java.util.Arrays;
 
 public class TransportLayer implements Layer{
 
-    Layer lowerLayer = new DataLinkLayer();
+    Layer upwardLayer;
+    Layer lowerLayer;
     static final int MAXPACKETINTSIZE = 200;
     static final int PORT = 25000;
     ArrayList<byte[]> dataPackets;
@@ -15,7 +16,9 @@ public class TransportLayer implements Layer{
     byte[] allData;
     byte fileNameLength;
 
-    public TransportLayer(){
+    public TransportLayer(Layer upwardLayer){
+        this.lowerLayer = new DataLinkLayer();
+        this.upwardLayer = upwardLayer;
         this.dataPackets = new ArrayList<>();
     }
 
@@ -78,6 +81,16 @@ public class TransportLayer implements Layer{
 
     @Override
     public void getFromLowerLayer(byte[] buffer) throws IOException{
+        String bufferStr = new String(buffer);
+        String paquetNumber = bufferStr.split(";")[0];
+        String maxPaquets = bufferStr.split(";")[1];
+        if (Integer.valueOf(paquetNumber) == dataPackets.size()){
+            dataPackets.add(buffer);
+            //sendACKPaquet
+            //sendToHigherLayer
+        } else {
+            //sendMissedPaquetNotice
+        }
 
     }
 
@@ -86,7 +99,7 @@ public class TransportLayer implements Layer{
 
     }
 
-    public void sendACKPacquet(){
+    public void sendACKPacquet(byte[] packetBytes, byte[] ipDestination, int port){
 
     }
 
@@ -97,7 +110,7 @@ public class TransportLayer implements Layer{
         byte[] ackPacketHeader = ackPacketHeaderStr.getBytes();
     }
 
-    public void sendMissedPacketNotice(int packetNumber){
+    public void sendMissedPacketNotice(byte[] packetBytes, byte[] ipDestination, int port){
 
     }
 

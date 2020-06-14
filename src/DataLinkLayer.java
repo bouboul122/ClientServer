@@ -14,24 +14,6 @@ public class DataLinkLayer implements Layer{
     byte[] port;
 
     @Override
-    public void sendToLowerLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException {
-        // send avec les datagrams packets
-        //enregistre dans un fichier .log
-
-    }
-
-    @Override
-    public void getFromLowerLayer(byte[] buffer) throws IOException {
-
-    }
-
-
-    @Override
-    public void sendToHigherLayer() {
-
-    }
-
-    @Override
     public void getFromHigherLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException {
         this.homemadePacket = buffer;
         String bufferStr = new String(homemadePacket);
@@ -55,4 +37,26 @@ public class DataLinkLayer implements Layer{
         System.out.println(Arrays.toString(packetWithCRC));
 
     }
+
+    @Override
+    public void sendToLowerLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException {
+        // send avec les datagrams packets
+        //enregistre dans un fichier .log
+
+    }
+
+    @Override
+    public void getFromLowerLayer(byte[] buffer) throws IOException {
+
+    }
+
+
+    @Override
+    public void sendToHigherLayer() {
+
+    }
+
+
+
+
 }
