@@ -8,7 +8,7 @@ public class Client {
 
         final int PORT = 25000;
 
-        TransportLayer transportLayer = new TransportLayer();
+
         ApplicationLayer applicationLayer = new ApplicationLayer(PORT);
 
         if (args.length == 0){
