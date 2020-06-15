@@ -210,7 +210,7 @@ public class DataLinkLayer implements Layer{
      * @return returns true if the odds are good
      */
     public byte[] errorGenerator(byte[] arrayToChange){
-        if(this.myPort == 30002 && this.generateError && Math.floor(Math.random()*1) == 0 && !alreadyGotError){
+        if(this.myPort == 30002 && this.generateError && Math.floor(Math.random()*20) == 0){
             arrayToChange = "BADPACKET".getBytes();
             this.alreadyGotError = true;
 

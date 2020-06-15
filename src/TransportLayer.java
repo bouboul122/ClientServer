@@ -12,6 +12,7 @@ import java.util.Arrays;
  */
 public class TransportLayer implements Layer{
 
+    int numOfFailures;
     int myPort;
     int toPort;
     Layer upwardLayer;
@@ -19,6 +20,7 @@ public class TransportLayer implements Layer{
     static final int MAXPACKETINTSIZE = 200;
     static final String ACKNOWLEDGEMESSAGE = "ACKNO";
     static final String RESENDMESSAGE = "NOACK";
+    static final String TERMINATEMESSAGE = "RESETCONNECT";
     ArrayList<byte[]> dataPackets;
     int lenOfBytesToSend;
     byte[] ipDestination;
@@ -37,6 +39,7 @@ public class TransportLayer implements Layer{
         this.dataPackets = new ArrayList<>();
         this.lenOfBytesToSend = 0;
         int numPacketsAcknowledged = 0;
+        this.numOfFailures = 0;
 
     }
 
@@ -97,7 +100,17 @@ public class TransportLayer implements Layer{
             this.lowerLayer.getFromHigherLayer(buffer, ipDestination, port);
         } else if (new String(buffer).split(",")[0].equals(RESENDMESSAGE)){
             System.out.println("Sending Missed packet notice for packet " + new String(buffer).split(",")[1]);
-            this.lowerLayer.getFromHigherLayer(buffer, ipDestination, port);
+            this.numOfFailures += 1;
+            if (numOfFailures == 3){
+                this.dataPackets.clear();
+                this.numPacketsAcknowledged = 0;
+                System.out.println("RESETTING CONNECTION");
+                byte[] resetMessage = createResetMessage();
+                this.sendResetMessage(resetMessage, ipDestination, port);
+            } else{
+                this.lowerLayer.getFromHigherLayer(buffer, ipDestination, port);
+            }
+
         }else{
             while(this.packetsSent < dataPackets.size()){
                 System.out.println("Sending packet number " + this.packetsSent);
@@ -123,7 +136,8 @@ public class TransportLayer implements Layer{
         } else if (headerArray[0].equals(RESENDMESSAGE)){
             System.out.println("Need to Resend packet "+ headerArray[1]);
             this.packetsSent = Integer.parseInt(headerArray[1]);
-
+        } else if(headerArray[0].equals(TERMINATEMESSAGE)){
+            this.packetsSent = 0;
             //Cote serveur qui prend les paquets et les met dans datapackets
         } else if (Integer.parseInt(headerArray[0]) == this.numPacketsAcknowledged){
             byte[] bytesWithoutHeader = Arrays.copyOfRange(buffer, 12, buffer.length);
@@ -180,5 +194,14 @@ public class TransportLayer implements Layer{
         String packetHeaderStr = missedPacketStr+','+packetNumber;
         byte[] missedPacketHeader = packetHeaderStr.getBytes();
         return missedPacketHeader;
+    }
+
+    public byte[] createResetMessage(){
+        byte[] resetConnectionMessage = TERMINATEMESSAGE.getBytes();
+        return resetConnectionMessage;
+    }
+
+    public void sendResetMessage(byte[] packetBytes, byte[] ipDestination, int port) throws IOException {
+        sendToLowerLayer(packetBytes, ipDestination, port);
     }
 }
