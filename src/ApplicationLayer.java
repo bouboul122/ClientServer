@@ -49,7 +49,7 @@ public class ApplicationLayer implements Layer{
     }
 
     @Override
-    public void getFromLowerLayer(byte[] buffer) throws IOException {
+    public void getFromLowerLayer(byte[] buffer, byte[] ipSource, int sourcePort) throws IOException {
         byte fileNameLength = buffer[0];
         byte[] fileNameBytes = Arrays.copyOfRange(buffer,1, 1+Integer.valueOf(fileNameLength));
         System.out.println("Writing to " + new String(fileNameBytes));

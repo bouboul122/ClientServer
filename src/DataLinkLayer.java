@@ -19,6 +19,7 @@ public class DataLinkLayer implements Layer{
     FileHandler statisticFile;
     Layer upperLayer;
     boolean generateError;
+    boolean alreadyGotError;
 
     DatagramSocket datagramSocket;
     DatagramPacket receivedPacket;
@@ -28,6 +29,7 @@ public class DataLinkLayer implements Layer{
         this.myPort = port;
         this.datagramSocket = new DatagramSocket(port);
         this.generateError = getError.equals("y");
+        this.alreadyGotError = false;
     }
 
     @Override
@@ -71,7 +73,7 @@ public class DataLinkLayer implements Layer{
 
 
     @Override
-    public void getFromLowerLayer(byte[] buffer) throws IOException {
+    public void getFromLowerLayer(byte[] buffer, byte[] ipSource, int sourcePort) throws IOException {
         System.err.println("Invalid operation");
     }
 
@@ -79,6 +81,8 @@ public class DataLinkLayer implements Layer{
     @Override
     public void sendToHigherLayer() throws IOException {
         byte[] receivedBytes = Arrays.copyOfRange(this.receivedPacket.getData(), 0, this.receivedPacket.getLength());
+        byte[] sourceAdress = this.receivedPacket.getAddress().getAddress();
+        int sourcePort = this.receivedPacket.getPort();
         byte crcByte = receivedBytes[0];
         byte[] bytesWithoutCRC = Arrays.copyOfRange(receivedBytes,1,receivedBytes.length);
 
@@ -87,13 +91,17 @@ public class DataLinkLayer implements Layer{
 
         if (checkCRC(crcByte, bytesWithoutCRC)){
             System.out.println("No error! Yoohooo");
+            logReport("Packet Verified. Sending it up");
+            upperLayer.getFromLowerLayer(bytesWithoutCRC, sourceAdress, sourcePort);
         }
         else {
-            System.err.println("Error in the byte");
-            throw new IOException("Error because your byte sucks");
+            System.out.println("Error in the byte");
+            String errorMessage = "RESEND";
+            byte[] errorMessageBytes = errorMessage.getBytes();
+            System.out.println(Arrays.toString(errorMessageBytes));
+            upperLayer.getFromLowerLayer(errorMessageBytes, sourceAdress, sourcePort);
         }
-        logReport("Packet Verified. Sending it up");
-        upperLayer.getFromLowerLayer(bytesWithoutCRC);
+
 
 
     }
@@ -129,8 +137,9 @@ public class DataLinkLayer implements Layer{
     }
 
     public boolean errorGenerator(byte[] arrayToChange){
-        if(this.generateError && Math.floor(Math.random()*2) == 0){
+        if(this.myPort == 30002 && this.generateError && Math.floor(Math.random()*4) == 0 && !alreadyGotError){
             arrayToChange[4] = 2;
+            alreadyGotError = true;
             return true;
         }
         return false;
