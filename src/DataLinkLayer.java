@@ -11,6 +11,12 @@ import java.util.logging.SimpleFormatter;
 import java.util.zip.CRC32;
 
 
+/**
+ *
+ * @author Ludovic Boulanger Jordan Choquet
+ *
+ */
+
 public class DataLinkLayer implements Layer{
     int myPort;
     int toPort;
@@ -23,12 +29,31 @@ public class DataLinkLayer implements Layer{
     DatagramSocket datagramSocket;
     DatagramPacket receivedPacket;
 
+    /**
+     * Constructor of the class
+     *
+     * @param port
+     * @param upperLayer
+     * @param getError
+     * @throws SocketException
+     */
+
     public DataLinkLayer(int port, Layer upperLayer, String getError) throws SocketException {
         this.upperLayer = upperLayer;
         this.myPort = port;
         this.datagramSocket = new DatagramSocket(port);
         this.generateError = getError.equals("y");
     }
+
+    /**
+     * Receives a buffer of the higher layer,
+     * which in this case is the transport layer.
+     *
+     * @param buffer
+     * @param ipDestination
+     * @param port
+     * @throws IOException
+     */
 
     @Override
     public void getFromHigherLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException {
@@ -40,6 +65,9 @@ public class DataLinkLayer implements Layer{
 
     }
 
+    /**
+     * Adds a CRC to the existing packet
+     */
     public void addCRC(){
         CRC32 crc = new CRC32();
         crc.update(homemadePacket);
@@ -48,6 +76,15 @@ public class DataLinkLayer implements Layer{
 
     }
 
+    /**
+     * Sends to the lower layor,
+     * which in this case is the Server's data link layer
+     *
+     * @param buffer
+     * @param ipDestination
+     * @param port
+     * @throws IOException
+     */
     @Override
     public void sendToLowerLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException {
 
@@ -58,6 +95,10 @@ public class DataLinkLayer implements Layer{
     }
 
 
+    /**
+     * Client is waiting for the packet to be sent
+     * @throws IOException
+     */
     @Override
     public void listen() throws IOException {
         byte[] buffer = new byte[400];
@@ -70,12 +111,20 @@ public class DataLinkLayer implements Layer{
     }
 
 
+    /**
+     * Receives from the
+     * @param buffer
+     * @throws IOException
+     */
     @Override
     public void getFromLowerLayer(byte[] buffer) throws IOException {
         System.err.println("Invalid operation");
     }
 
 
+    /**
+     * @throws IOException
+     */
     @Override
     public void sendToHigherLayer() throws IOException {
         byte[] receivedBytes = Arrays.copyOfRange(this.receivedPacket.getData(), 0, this.receivedPacket.getLength());
@@ -98,6 +147,11 @@ public class DataLinkLayer implements Layer{
 
     }
 
+    /**
+     * @param crc
+     * @param array
+     * @return
+     */
     public boolean checkCRC(byte crc, byte[] array){
         CRC32 crcToCheck = new CRC32();
         crcToCheck.update(array);
@@ -107,6 +161,13 @@ public class DataLinkLayer implements Layer{
         return false;
     }
 
+    /**
+     * Creates a logger report which writes in a file .log
+     * the time, date and type of operation accomplished
+     *
+     * @param strToWrite
+     * @throws IOException
+     */
     public void logReport(String strToWrite) throws IOException {
         Logger logger = Logger.getLogger("MyLog");
 
@@ -128,6 +189,13 @@ public class DataLinkLayer implements Layer{
         }
     }
 
+    /**
+     * Random generator that has the odds on 2 to trigger an error
+     * on the fourth byte of a trame
+     *
+     * @param arrayToChange
+     * @return returns true if the odds are good
+     */
     public boolean errorGenerator(byte[] arrayToChange){
         if(this.generateError && Math.floor(Math.random()*2) == 0){
             arrayToChange[4] = 2;

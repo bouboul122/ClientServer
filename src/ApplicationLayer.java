@@ -5,7 +5,13 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
+
+
 public class ApplicationLayer implements Layer{
+
+    /**
+     *
+     */
 
     byte[] filePath;
     byte[] ipDestination;
