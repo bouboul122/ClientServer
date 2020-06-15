@@ -9,14 +9,17 @@ public class TransportLayer implements Layer{
     int myPort;
     int toPort;
     Layer upwardLayer;
-    Layer lowerLayer;
+    DataLinkLayer lowerLayer;
     static final int MAXPACKETINTSIZE = 200;
+    static final String ACKNOWLEDGEMESSAGE = "ACKNO";
+    static final String RESENDMESSAGE = "NOACK";
     ArrayList<byte[]> dataPackets;
     int lenOfBytesToSend;
     byte[] ipDestination;
     byte[] allData;
     byte[] lastPacketSent;
     int numPacketsAcknowledged;
+    int packetsSent;
 
     byte[] ipSource;
     int clientPort;
@@ -28,6 +31,7 @@ public class TransportLayer implements Layer{
         this.dataPackets = new ArrayList<>();
         this.lenOfBytesToSend = 0;
         int numPacketsAcknowledged = 0;
+
     }
 
     @Override
@@ -82,19 +86,18 @@ public class TransportLayer implements Layer{
 
     @Override
     public void sendToLowerLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException {
-        if(new String(buffer).split(",")[0].equals("RECEIVED")){
-            System.out.println("Sending received packet for packet number " + new String(buffer).split(",")[1]);
+        if(new String(buffer).split(",")[0].equals(ACKNOWLEDGEMESSAGE)) {
+            System.out.println("Sending ACK for packet number " + new String(buffer).split(",")[1]);
             this.lowerLayer.getFromHigherLayer(buffer, ipDestination, port);
-        }
-        else if (new String(buffer).split(",")[0].equals("RESEND")){
-            System.out.println("Sending missed packet for packet number " + new String(buffer).split(",")[1]);
+        } else if (new String(buffer).split(",")[0].equals(RESENDMESSAGE)){
+            System.out.println("Sending Missed packet notice for packet " + new String(buffer).split(",")[1]);
             this.lowerLayer.getFromHigherLayer(buffer, ipDestination, port);
-        }
-        else{
-            for (int i=0; i<dataPackets.size();i++){
-                System.out.println("Sending packet number " + i);
-                lastPacketSent = dataPackets.get(i);
-                this.lowerLayer.getFromHigherLayer(dataPackets.get(i), ipDestination, port);
+        }else{
+            while(this.packetsSent < dataPackets.size()){
+                System.out.println("Sending packet number " + this.packetsSent);
+                this.lowerLayer.getFromHigherLayer(dataPackets.get(this.packetsSent), ipDestination, port);
+                this.packetsSent++;
+                this.lowerLayer.setSocketTimeout();
                 this.lowerLayer.listen();
             }
         }
@@ -103,42 +106,40 @@ public class TransportLayer implements Layer{
     @Override
     public void getFromLowerLayer(byte[] buffer, byte[] ipSource, int sourcePort) throws IOException{
         byte[] byteHeader = Arrays.copyOfRange(buffer,0,11);
+        String byteHeaderStr= new String(byteHeader);
+        String[] headerArray = byteHeaderStr.split(",");
+        System.out.println(headerArray[0]);
 
-
-        String[] byteHeaderStr= new String(byteHeader).split(",");
-        System.out.println(byteHeaderStr[0]);
-
-        if (byteHeaderStr[0].equals("RECEIVED")){
-            System.out.println("ACK for packet " + this.numPacketsAcknowledged + " received! Continuing to send...");
+        if (headerArray[0].equals(ACKNOWLEDGEMESSAGE)){
+            System.out.println("ACK for packet " + headerArray[1] + " received! Continuing to send...");
             this.numPacketsAcknowledged += 1;
             System.out.println("number of acknowleged packets is now: " + this.numPacketsAcknowledged);
-        } else if (Arrays.equals(buffer, "RESEND".getBytes())){
-            this.ipSource = ipSource;
-            this.clientPort = sourcePort;
-            System.out.println("Creating a missed packet notice!");
-            byte[] missedPacket = createMissedPacketNotice(numPacketsAcknowledged);
-            sendMissedPacketNotice(missedPacket, ipSource, sourcePort);
-        } else if (byteHeaderStr[0].equals("RESENDLAST")){
-            System.out.println("Sending missed packet");
-            sendMissedPacketNotice(lastPacketSent, ipSource, sourcePort);
-        } else if (Integer.parseInt(byteHeaderStr[0]) == this.numPacketsAcknowledged){
+        } else if (headerArray[0].equals(RESENDMESSAGE)){
+            System.out.println("Need to Resend packet "+ headerArray[1]);
+            this.packetsSent = Integer.parseInt(headerArray[1]);
+
+            //Cote serveur qui prend les paquets et les met dans datapackets
+        } else if (Integer.parseInt(headerArray[0]) == this.numPacketsAcknowledged){
             byte[] bytesWithoutHeader = Arrays.copyOfRange(buffer, 12, buffer.length);
-            System.out.println("Received packet number " + byteHeaderStr[0] + " out of " + byteHeaderStr[1]);
+            System.out.println("Received packet number " + headerArray[0] + " out of " + headerArray[1]);
             this.lenOfBytesToSend += bytesWithoutHeader.length;
             dataPackets.add(bytesWithoutHeader);
             this.numPacketsAcknowledged +=1;
 
             //sendACKPaquet
-            byte[] ackPacket = createACKpacket(this.dataPackets.size()-1);
+            byte[] ackPacket = createACKpacket(headerArray[0]);
 
             sendACKPacket(ackPacket, ipSource, sourcePort);
-            System.out.println("Added packet number " + Integer.parseInt(byteHeaderStr[0]));
-            if (Integer.parseInt(byteHeaderStr[0]) == Integer.parseInt(byteHeaderStr[1]) - 1){
+            System.out.println("Added packet number " + Integer.parseInt(headerArray[0]));
+            if (Integer.parseInt(headerArray[0]) == Integer.parseInt(headerArray[1]) - 1){
                 System.out.println("Sending everything to upper layer");
                 this.numPacketsAcknowledged = 0;
                 sendToHigherLayer();
-
             }
+         //Need a reTransmit
+        } else if (Integer.parseInt(headerArray[0]) > this.numPacketsAcknowledged) {
+            byte[] missedPacket = createMissedPacketNotice(intToStr(this.numPacketsAcknowledged, 5));
+            sendMissedPacketNotice(missedPacket, ipSource, sourcePort);
         }
     }
 
@@ -157,10 +158,9 @@ public class TransportLayer implements Layer{
         sendToLowerLayer(packetBytes, ipDestination, port);
     }
 
-    public byte[] createACKpacket(int packetNumber){
-        String ackMessage = "RECEIVED";
-        String ackNumber = intToStr(packetNumber, 5);
-        String ackPacketHeaderStr = ackMessage+','+ackNumber;
+    public byte[] createACKpacket(String packetNumber){
+        String ackMessage = this.ACKNOWLEDGEMESSAGE;
+        String ackPacketHeaderStr = ackMessage+','+packetNumber;
         byte[] ackPacketHeader = ackPacketHeaderStr.getBytes();
         return ackPacketHeader;
     }
@@ -169,10 +169,9 @@ public class TransportLayer implements Layer{
         sendToLowerLayer(packetBytes, ipDestination, port);
     }
 
-    public byte[] createMissedPacketNotice(int packetNumber){
-        String missedPacketStr = "RESENDLAST";
-        String missedPacketNumber = intToStr(packetNumber, 5);
-        String packetHeaderStr = missedPacketStr+','+missedPacketNumber;
+    public byte[] createMissedPacketNotice(String packetNumber){
+        String missedPacketStr = this.RESENDMESSAGE;
+        String packetHeaderStr = missedPacketStr+','+packetNumber;
         byte[] missedPacketHeader = packetHeaderStr.getBytes();
         return missedPacketHeader;
     }

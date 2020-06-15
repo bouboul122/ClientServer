@@ -1,8 +1,5 @@
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.logging.FileHandler;
@@ -105,10 +102,16 @@ public class DataLinkLayer implements Layer{
     public void listen() throws IOException {
         byte[] buffer = new byte[400];
         this.receivedPacket = new DatagramPacket(buffer, buffer.length);
-        System.out.println("Listening...");
-        this.datagramSocket.receive(this.receivedPacket);
-        logReport("Packet Received, sending to verification");
-        sendToHigherLayer();
+        try{
+            System.out.println("Listening...");
+            this.datagramSocket.receive(this.receivedPacket);
+            logReport("Packet Received, sending to verification");
+            sendToHigherLayer();
+        } catch (SocketTimeoutException e){
+            System.out.println("Timed out");
+            //throw new IOException("Socket time out test");
+        }
+
 
     }
 
@@ -136,7 +139,7 @@ public class DataLinkLayer implements Layer{
         byte[] bytesWithoutCRC = Arrays.copyOfRange(receivedBytes,1,receivedBytes.length);
 
         //Test pour faire une erreur dans le byte
-        errorGenerator(bytesWithoutCRC);
+        bytesWithoutCRC = errorGenerator(bytesWithoutCRC);
 
         if (checkCRC(crcByte, bytesWithoutCRC)){
             System.out.println("No error! Yoohooo");
@@ -145,10 +148,10 @@ public class DataLinkLayer implements Layer{
         }
         else {
             System.out.println("Error in the byte");
-            String errorMessage = "RESEND";
-            byte[] errorMessageBytes = errorMessage.getBytes();
-            System.out.println(Arrays.toString(errorMessageBytes));
-            upperLayer.getFromLowerLayer(errorMessageBytes, sourceAdress, sourcePort);
+            System.out.println(Arrays.toString(bytesWithoutCRC));
+            //throw new IOException("Ca chie");
+            listen();
+            //upperLayer.getFromLowerLayer(bytesWithoutCRC, sourceAdress, sourcePort);
         }
 
 
@@ -204,13 +207,17 @@ public class DataLinkLayer implements Layer{
      * @param arrayToChange
      * @return returns true if the odds are good
      */
-    public boolean errorGenerator(byte[] arrayToChange){
-        if(this.myPort == 30002 && this.generateError && Math.floor(Math.random()*4) == 0 && !alreadyGotError){
-            arrayToChange[4] = 2;
-            alreadyGotError = true;
-            return true;
+    public byte[] errorGenerator(byte[] arrayToChange){
+        if(this.myPort == 30002 && this.generateError && Math.floor(Math.random()*1) == 0 && !alreadyGotError){
+            arrayToChange = "BADPACKET".getBytes();
+            this.alreadyGotError = true;
+
         }
-        return false;
+        return arrayToChange;
+    }
+
+    public void setSocketTimeout() throws SocketException {
+        this.datagramSocket.setSoTimeout(200);
     }
 
 }
