@@ -7,7 +7,7 @@ public class Server {
         final int PORTCLIENT = 30001;
 
 
-        ApplicationLayer applicationLayer = new ApplicationLayer(PORTSERVER);
+        ApplicationLayer applicationLayer = new ApplicationLayer(PORTSERVER, args[0]);
         while (true){
             applicationLayer.listen();
         }

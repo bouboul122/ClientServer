@@ -16,9 +16,9 @@ public class TransportLayer implements Layer{
     byte[] ipDestination;
     byte[] allData;
 
-    public TransportLayer(int port, Layer upwardLayer) throws SocketException {
+    public TransportLayer(int port, Layer upwardLayer, String getError) throws SocketException {
         this.myPort = port;
-        this.lowerLayer = new DataLinkLayer(myPort, this);
+        this.lowerLayer = new DataLinkLayer(myPort, this, getError);
         this.upwardLayer = upwardLayer;
         this.dataPackets = new ArrayList<>();
         this.lenOfBytesToSend = 0;
@@ -98,15 +98,12 @@ public class TransportLayer implements Layer{
             System.out.println("Added packet number " + Integer.parseInt(byteHeaderStr[0]));
             if (Integer.parseInt(byteHeaderStr[0]) == Integer.parseInt(byteHeaderStr[1]) - 1){
                 System.out.println("Sending everything to upper layer");
+                //sendACKPaquet
                 sendToHigherLayer();
             }
-
-            //sendACKPaquet
-            //sendToHigherLayer
         } else {
-            //sendMissedPaquetNotice
+            //send Error packet
         }
-
 
     }
 

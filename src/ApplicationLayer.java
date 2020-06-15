@@ -11,8 +11,8 @@ public class ApplicationLayer implements Layer{
     byte[] ipDestination;
     byte[] byteFile;
     Layer downwardLayer;
-    public ApplicationLayer(int port) throws SocketException {
-        downwardLayer = new TransportLayer(port, this);
+    public ApplicationLayer(int port, String getError) throws SocketException {
+        downwardLayer = new TransportLayer(port, this, getError);
     }
 
     @Override

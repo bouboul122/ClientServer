@@ -10,8 +10,6 @@ public class Client {
         final int PORTCLIENT = 30001;
 
 
-        ApplicationLayer applicationLayer = new ApplicationLayer(PORTCLIENT);
-
         if (args.length == 0){
             System.err.println("File not found");
         } else {
@@ -19,9 +17,11 @@ public class Client {
             System.out.println("Reading " + args[0]);
             String destination = args[1];
             System.out.println("Sending to " + args[1]);
-            String source = args[2];
-            System.out.println("Sending from " + source);
+            String getError = args[2];
+            System.out.println("Getting an Error? " + getError);
             String[] ipNumbers = args[1].split("\\.");
+
+            ApplicationLayer applicationLayer = new ApplicationLayer(PORTCLIENT, getError);
 
             byte[] ipDestination = new byte[4];
             for (int i = 0; i < 4;i++) {
