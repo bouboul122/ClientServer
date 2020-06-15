@@ -1,4 +1,5 @@
 import java.io.*;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -10,11 +11,8 @@ public class ApplicationLayer implements Layer{
     byte[] ipDestination;
     byte[] byteFile;
     Layer downwardLayer;
-    int fromPort;
-
-    public ApplicationLayer(int port){
-        downwardLayer = new TransportLayer(this);
-        this.fromPort = port;
+    public ApplicationLayer(int port, String getError) throws SocketException {
+        downwardLayer = new TransportLayer(port, this, getError);
     }
 
     @Override
@@ -36,7 +34,7 @@ public class ApplicationLayer implements Layer{
         ByteBuffer bytesToSendBuffer = ByteBuffer.wrap(bytesToSend);
         bytesToSendBuffer.put(fileNameLength).put(filePath).put(byteFile);
         //transfere a la couche de transport en dessous
-        downwardLayer.getFromHigherLayer(bytesToSend, ipDestination, 0);
+        downwardLayer.getFromHigherLayer(bytesToSend, ipDestination, toPort);
     }
 
     public void getIpAdressInBytes(String ipAdress, byte[] adress){
@@ -51,19 +49,27 @@ public class ApplicationLayer implements Layer{
     }
 
     @Override
-    public void getFromLowerLayer(byte [] buffer) throws IOException {
-
-        String[] body = new String(buffer).split(";");
+    public void getFromLowerLayer(byte[] buffer) throws IOException {
+        byte fileNameLength = buffer[0];
+        byte[] fileNameBytes = Arrays.copyOfRange(buffer,1, 1+Integer.valueOf(fileNameLength));
+        System.out.println("Writing to " + new String(fileNameBytes));
+        String fileInWords = new String(Arrays.copyOfRange(buffer,1+Integer.valueOf(fileNameLength), buffer.length));
+        String filePath = "C:\\Users\\ludov\\OneDrive - USherbrooke\\Ete 2020\\APP3\\"+new String(fileNameBytes);
 
         try {
-            FileWriter myWriter = new FileWriter("C:\\Users\\ludov\\OneDrive - USherbrooke\\ete2020\\APP3\\"+new String(body[0]));
-            myWriter.write(new String (body[1]));
-            myWriter.close();
-            System.out.println("Successfully wrote to the file.");
+            FileWriter writer = new FileWriter(filePath);
+            BufferedWriter bufferedWriter = new BufferedWriter(writer);
+
+            bufferedWriter.write(fileInWords);
+
+            bufferedWriter.close();
+            System.out.println("Closed file");
         } catch (IOException e) {
-            System.out.println("An error occurred.");
+            System.err.println("Could not write to file");
             e.printStackTrace();
         }
+        System.out.println("Done writing to file");
+
     }
 
     @Override
@@ -74,6 +80,11 @@ public class ApplicationLayer implements Layer{
     @Override
     public void getFromHigherLayer(byte[] buffer, byte[] ipDestination, int port) {
         System.err.println("Cannot send to a higher Layer");
+    }
+
+    @Override
+    public void listen() throws IOException {
+        downwardLayer.listen();
     }
 
 }
