@@ -4,6 +4,12 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+
+/**
+ * Transport Layor
+ *
+ * @author Ludovic Boulanger, Jordan Choquet
+ */
 public class TransportLayer implements Layer{
 
     int myPort;

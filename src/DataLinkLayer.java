@@ -9,8 +9,10 @@ import java.util.zip.CRC32;
 
 
 /**
+ * Data Link Layer
  *
- * @author Ludovic Boulanger Jordan Choquet
+ * @author Ludovic Boulanger
+ * @author Jordan Choquet
  *
  */
 

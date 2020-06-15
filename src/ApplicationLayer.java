@@ -6,12 +6,14 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 
 
+/**
+ * Application layer
+ *
+ * @author Ludovic Boulanger
+ * @author Jordan Choquet
+ */
 
 public class ApplicationLayer implements Layer{
-
-    /**
-     *
-     */
 
     byte[] filePath;
     byte[] ipDestination;
