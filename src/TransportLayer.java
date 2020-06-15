@@ -1,35 +1,43 @@
 import java.io.IOException;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class TransportLayer implements Layer{
 
+    int myPort;
+    int toPort;
     Layer upwardLayer;
     Layer lowerLayer;
     static final int MAXPACKETINTSIZE = 200;
-    static final int PORT = 25000;
     ArrayList<byte[]> dataPackets;
+    int lenOfBytesToSend;
     byte[] ipDestination;
-    byte[] sourceIp;
-    byte[] fileName;
     byte[] allData;
-    byte fileNameLength;
 
-    public TransportLayer(Layer upwardLayer){
-        this.lowerLayer = new DataLinkLayer();
+    public TransportLayer(int port, Layer upwardLayer) throws SocketException {
+        this.myPort = port;
+        this.lowerLayer = new DataLinkLayer(myPort, this);
         this.upwardLayer = upwardLayer;
         this.dataPackets = new ArrayList<>();
+        this.lenOfBytesToSend = 0;
     }
 
     @Override
     public void getFromHigherLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException {
+        this.toPort = port;
        this.allData = buffer;
        this.ipDestination = ipDestination;
        int numOfPackets = (int) Math.floor(this.allData.length/MAXPACKETINTSIZE) + 1;
        System.out.println(numOfPackets);
        createPackets(numOfPackets);
-       sendToLowerLayer(buffer, ipDestination, port);
+       sendToLowerLayer(buffer, ipDestination, this.toPort);
+    }
+
+    @Override
+    public void listen() throws IOException {
+        lowerLayer.listen();
     }
 
     public void createPackets(int numOfPackets){
@@ -37,7 +45,7 @@ public class TransportLayer implements Layer{
 
         String packetBodyStr;
         String packetHeaderStr;
-        String portStr = String.valueOf(PORT);
+        String portStr = String.valueOf(toPort);
         String maxPackets = intToStr(numOfPackets, 5);
         String ipDestinationStr = new String(this.ipDestination);
 
@@ -58,9 +66,6 @@ public class TransportLayer implements Layer{
             packetBuffer.put(packetHeaderStr.getBytes()).put(packetBodyStr.getBytes());
             dataPackets.add(packet);
         }
-        for (byte[] packetToString : dataPackets){
-            System.out.println(Arrays.toString(packetToString));
-        }
     }
 
     public String intToStr(int num, int maxChars){
@@ -73,30 +78,46 @@ public class TransportLayer implements Layer{
 
     @Override
     public void sendToLowerLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException {
-        this.lowerLayer.getFromHigherLayer(dataPackets.get(0), ipDestination, port);
         for (int i=0; i<dataPackets.size();i++){
             System.out.println("Sending packet number " + i);
+            this.lowerLayer.getFromHigherLayer(dataPackets.get(i), ipDestination, port);
         }
     }
 
     @Override
     public void getFromLowerLayer(byte[] buffer) throws IOException{
-        String bufferStr = new String(buffer);
-        String paquetNumber = bufferStr.split(";")[0];
-        String maxPaquets = bufferStr.split(";")[1];
-        if (Integer.valueOf(paquetNumber) == dataPackets.size()){
-            dataPackets.add(buffer);
+        byte[] byteHeader = Arrays.copyOfRange(buffer,0,11);
+        byte[] bytesWithoutHeader = Arrays.copyOfRange(buffer, 12, buffer.length);
+
+        String[] byteHeaderStr= new String(byteHeader).split(",");
+        System.out.println("Received packet number " + byteHeaderStr[0] + " out of " + byteHeaderStr[1]);
+
+        if (Integer.parseInt(byteHeaderStr[0]) == dataPackets.size()){
+            this.lenOfBytesToSend += bytesWithoutHeader.length;
+            dataPackets.add(bytesWithoutHeader);
+            System.out.println("Added packet number " + Integer.parseInt(byteHeaderStr[0]));
+            if (Integer.parseInt(byteHeaderStr[0]) == Integer.parseInt(byteHeaderStr[1]) - 1){
+                System.out.println("Sending everything to upper layer");
+                sendToHigherLayer();
+            }
+
             //sendACKPaquet
             //sendToHigherLayer
         } else {
             //sendMissedPaquetNotice
         }
 
+
     }
 
     @Override
-    public void sendToHigherLayer() {
-
+    public void sendToHigherLayer() throws IOException {
+        byte[] bytesToSend = new byte[lenOfBytesToSend];
+        ByteBuffer bytesToSendBuffer = ByteBuffer.wrap(bytesToSend);
+        for (byte[] packet: dataPackets){
+            bytesToSendBuffer.put(packet);
+        }
+        upwardLayer.getFromLowerLayer(bytesToSend);
     }
 
     public void sendACKPacquet(byte[] packetBytes, byte[] ipDestination, int port){

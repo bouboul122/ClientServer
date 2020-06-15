@@ -6,10 +6,11 @@ public class Client {
 
     public static void main(String[] args) throws IOException {
 
-        final int PORT = 25000;
+        final int PORTSERVER = 30002;
+        final int PORTCLIENT = 30001;
 
 
-        ApplicationLayer applicationLayer = new ApplicationLayer(PORT);
+        ApplicationLayer applicationLayer = new ApplicationLayer(PORTCLIENT);
 
         if (args.length == 0){
             System.err.println("File not found");
@@ -28,7 +29,7 @@ public class Client {
             }
             byte[] filePath = args[0].getBytes();
 
-            applicationLayer.sendToLowerLayer(filePath, ipDestination, 0);
+            applicationLayer.sendToLowerLayer(filePath, ipDestination, PORTSERVER);
 
 
             byte[] bufferByte = ("one-liners.txt;Life is wonderful. Without it we'd all be dead.").getBytes();
