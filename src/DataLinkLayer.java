@@ -74,7 +74,6 @@ public class DataLinkLayer implements Layer{
         crc.update(homemadePacket);
         ByteBuffer bufferWithCRC = ByteBuffer.wrap(this.packetWithCRC);
         bufferWithCRC.put(Long.valueOf(crc.getValue()).byteValue()).put(homemadePacket);
-
     }
 
     /**
@@ -119,7 +118,8 @@ public class DataLinkLayer implements Layer{
 
 
     /**
-     * Receives from the
+     * Does not receive anything from the Server's Data link layer
+     *
      * @param buffer
      * @throws IOException
      */
@@ -130,6 +130,11 @@ public class DataLinkLayer implements Layer{
 
 
     /**
+     * Sends to the transport layer
+     * If the packet is corrupted the server will be
+     * put in the listening mode waiting to receive de
+     * retransmission of the packet
+     *
      * @throws IOException
      */
     @Override
@@ -177,6 +182,7 @@ public class DataLinkLayer implements Layer{
     /**
      * Creates a logger report which writes in a file .log
      * the time, date and type of operation accomplished
+     * The logger is saved in a repository on the computer
      *
      * @param strToWrite
      * @throws IOException
@@ -186,7 +192,8 @@ public class DataLinkLayer implements Layer{
 
         try {
             // This block configure the logger with handler and formatter
-            this.statisticFile = new FileHandler("C:\\Users\\ludov\\OneDrive - USherbrooke\\Ete 2020\\APP3\\ClientServer.log", true);
+            //this.statisticFile = new FileHandler("C:\\Users\\ludov\\OneDrive - USherbrooke\\Ete 2020\\APP3\\ClientServer.log", true);
+            this.statisticFile = new FileHandler("C:\\Users\\jordl\\OneDrive - USherbrooke\\S3\\APP3\\ClientServer.log", true);
             logger.addHandler(this.statisticFile);
             SimpleFormatter formatter = new SimpleFormatter();
             this.statisticFile.setFormatter(formatter);
@@ -218,6 +225,12 @@ public class DataLinkLayer implements Layer{
         return arrayToChange;
     }
 
+    /**
+     * Sets a timeout used to when the server
+     * is waiting for an acknowledged packet
+     *
+     * @throws SocketException
+     */
     public void setSocketTimeout() throws SocketException {
         this.datagramSocket.setSoTimeout(200);
     }

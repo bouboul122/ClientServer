@@ -1,5 +1,9 @@
 import java.io.IOException;
 
+/**
+ * Interface used for the different layer of the
+ * model for the protocol
+ */
 public interface Layer {
 
     void sendToLowerLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException;
