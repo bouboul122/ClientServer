@@ -6,6 +6,6 @@ public interface Layer {
     void getFromLowerLayer(byte[] buffer, byte[] ipSource, int sourcePort) throws IOException;
     void sendToHigherLayer() throws IOException;
     void getFromHigherLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException;
-    void listen() throws IOException;
+    void listen(boolean setTimer) throws IOException;
 
 }

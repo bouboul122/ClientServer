@@ -1,10 +1,9 @@
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 public class Client {
 
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException{
 
         final int PORTSERVER = 30002;
         final int PORTCLIENT = 30001;
@@ -30,11 +29,6 @@ public class Client {
             byte[] filePath = args[0].getBytes();
 
             applicationLayer.sendToLowerLayer(filePath, ipDestination, PORTSERVER);
-
-
-            byte[] bufferByte = ("one-liners.txt;Life is wonderful. Without it we'd all be dead.").getBytes();
-            System.out.println("-----------------------------");
-//          applicationLayer.getFromLowerLayer(bufferByte);
         }
 
 

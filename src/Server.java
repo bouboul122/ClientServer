@@ -11,7 +11,7 @@ public class Server {
 
         ApplicationLayer applicationLayer = new ApplicationLayer(PORTSERVER, args[0]);
         while (keepRunning){
-            applicationLayer.listen();
+            applicationLayer.listen(false);
         }
 
     }

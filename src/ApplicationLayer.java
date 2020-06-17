@@ -7,7 +7,7 @@ import java.util.Arrays;
 
 
 
-public class ApplicationLayer implements Layer{
+public class ApplicationLayer implements Layer {
 
     /**
      *
@@ -17,6 +17,7 @@ public class ApplicationLayer implements Layer{
     byte[] ipDestination;
     byte[] byteFile;
     Layer downwardLayer;
+
     public ApplicationLayer(int port, String getError) throws SocketException {
         downwardLayer = new TransportLayer(port, this, getError);
     }
@@ -43,24 +44,24 @@ public class ApplicationLayer implements Layer{
         downwardLayer.getFromHigherLayer(bytesToSend, ipDestination, toPort);
     }
 
-    public void getIpAdressInBytes(String ipAdress, byte[] adress){
+    public void getIpAdressInBytes(String ipAdress, byte[] adress) {
         String[] ipAdressDestination = ipAdress.split("\\.");
-        for (int i = 0; i < 4;i++) {
+        for (int i = 0; i < 4; i++) {
             adress[i] = Integer.valueOf(ipAdressDestination[i]).byteValue();
         }
     }
 
     public void getAllFileBytes(String fileName) throws IOException {
-       this.byteFile = Files.readAllBytes(Paths.get(fileName));
+        this.byteFile = Files.readAllBytes(Paths.get(fileName));
     }
 
     @Override
     public void getFromLowerLayer(byte[] buffer, byte[] ipSource, int sourcePort) throws IOException {
         byte fileNameLength = buffer[0];
-        byte[] fileNameBytes = Arrays.copyOfRange(buffer,1, 1+Integer.valueOf(fileNameLength));
+        byte[] fileNameBytes = Arrays.copyOfRange(buffer, 1, 1 + Integer.valueOf(fileNameLength));
         System.out.println("Writing to " + new String(fileNameBytes));
-        String fileInWords = new String(Arrays.copyOfRange(buffer,1+Integer.valueOf(fileNameLength), buffer.length));
-        String filePath = "C:\\Users\\ludov\\OneDrive - USherbrooke\\Ete 2020\\APP3\\"+new String(fileNameBytes);
+        String fileInWords = new String(Arrays.copyOfRange(buffer, 1 + Integer.valueOf(fileNameLength), buffer.length));
+        String filePath = "C:\\Users\\ludov\\OneDrive - USherbrooke\\Ete 2020\\APP3\\" + new String(fileNameBytes);
 
         try {
             FileWriter writer = new FileWriter(filePath);
@@ -75,7 +76,6 @@ public class ApplicationLayer implements Layer{
             e.printStackTrace();
         }
         System.out.println("Done writing to file");
-
     }
 
     @Override
@@ -89,8 +89,8 @@ public class ApplicationLayer implements Layer{
     }
 
     @Override
-    public void listen() throws IOException {
-        downwardLayer.listen();
+    public void listen(boolean setTimer) throws IOException {
+        downwardLayer.listen(setTimer);
     }
 
 }

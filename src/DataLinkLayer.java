@@ -99,7 +99,10 @@ public class DataLinkLayer implements Layer{
      * @throws IOException
      */
     @Override
-    public void listen() throws IOException {
+    public void listen(boolean setTimer) throws IOException {
+        if (setTimer){
+            setSocketTimeout();
+        }
         byte[] buffer = new byte[400];
         this.receivedPacket = new DatagramPacket(buffer, buffer.length);
         try{
@@ -131,7 +134,7 @@ public class DataLinkLayer implements Layer{
      * @throws IOException
      */
     @Override
-    public void sendToHigherLayer() throws IOException {
+    public void sendToHigherLayer() throws IOException{
         byte[] receivedBytes = Arrays.copyOfRange(this.receivedPacket.getData(), 0, this.receivedPacket.getLength());
         byte[] sourceAdress = this.receivedPacket.getAddress().getAddress();
         int sourcePort = this.receivedPacket.getPort();
@@ -149,9 +152,7 @@ public class DataLinkLayer implements Layer{
         else {
             System.out.println("Error in the byte");
             System.out.println(Arrays.toString(bytesWithoutCRC));
-            //throw new IOException("Ca chie");
-            listen();
-            //upperLayer.getFromLowerLayer(bytesWithoutCRC, sourceAdress, sourcePort);
+            listen(false);
         }
 
 
@@ -208,7 +209,7 @@ public class DataLinkLayer implements Layer{
      * @return returns true if the odds are good
      */
     public byte[] errorGenerator(byte[] arrayToChange){
-        if(this.myPort == 30002 && this.generateError && Math.floor(Math.random()*20) == 0){
+        if(this.myPort == 30002 && this.generateError && Math.floor(Math.random()*10) == 0){
             arrayToChange = "BADPACKET".getBytes();
             this.alreadyGotError = true;
 

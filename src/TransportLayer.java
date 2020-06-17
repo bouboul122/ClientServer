@@ -9,8 +9,8 @@ public class TransportLayer implements Layer{
     int numOfFailures;
     int myPort;
     int toPort;
-    Layer upwardLayer;
-    DataLinkLayer lowerLayer;
+    Layer upperLayer;
+    Layer lowerLayer;
     static final int MAXPACKETINTSIZE = 200;
     static final String ACKNOWLEDGEMESSAGE = "ACKNO";
     static final String RESENDMESSAGE = "NOACK";
@@ -19,26 +19,22 @@ public class TransportLayer implements Layer{
     int lenOfBytesToSend;
     byte[] ipDestination;
     byte[] allData;
-    byte[] lastPacketSent;
     int numPacketsAcknowledged;
     int packetsSent;
-
-    byte[] ipSource;
-    int clientPort;
 
     public TransportLayer(int port, Layer upwardLayer, String getError) throws SocketException {
         this.myPort = port;
         this.lowerLayer = new DataLinkLayer(myPort, this, getError);
-        this.upwardLayer = upwardLayer;
+        this.upperLayer = upwardLayer;
         this.dataPackets = new ArrayList<>();
         this.lenOfBytesToSend = 0;
-        int numPacketsAcknowledged = 0;
+        this.numPacketsAcknowledged = 0;
         this.numOfFailures = 0;
 
     }
 
     @Override
-    public void getFromHigherLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException {
+    public void getFromHigherLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException{
         this.toPort = port;
        this.allData = buffer;
        this.ipDestination = ipDestination;
@@ -49,8 +45,8 @@ public class TransportLayer implements Layer{
     }
 
     @Override
-    public void listen() throws IOException {
-        lowerLayer.listen();
+    public void listen(boolean setTimer) throws IOException {
+        lowerLayer.listen(setTimer);
     }
 
     public void createPackets(int numOfPackets){
@@ -88,7 +84,7 @@ public class TransportLayer implements Layer{
     }
 
     @Override
-    public void sendToLowerLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException {
+    public void sendToLowerLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException{
         if(new String(buffer).split(",")[0].equals(ACKNOWLEDGEMESSAGE)) {
             System.out.println("Sending ACK for packet number " + new String(buffer).split(",")[1]);
             this.lowerLayer.getFromHigherLayer(buffer, ipDestination, port);
@@ -110,8 +106,7 @@ public class TransportLayer implements Layer{
                 System.out.println("Sending packet number " + this.packetsSent);
                 this.lowerLayer.getFromHigherLayer(dataPackets.get(this.packetsSent), ipDestination, port);
                 this.packetsSent++;
-                this.lowerLayer.setSocketTimeout();
-                this.lowerLayer.listen();
+                this.lowerLayer.listen(true);
             }
         }
     }
@@ -132,6 +127,7 @@ public class TransportLayer implements Layer{
             this.packetsSent = Integer.parseInt(headerArray[1]);
         } else if(headerArray[0].equals(TERMINATEMESSAGE)){
             this.packetsSent = 0;
+            this.numPacketsAcknowledged = 0;
             //Cote serveur qui prend les paquets et les met dans datapackets
         } else if (Integer.parseInt(headerArray[0]) == this.numPacketsAcknowledged){
             byte[] bytesWithoutHeader = Arrays.copyOfRange(buffer, 12, buffer.length);
@@ -158,17 +154,17 @@ public class TransportLayer implements Layer{
     }
 
     @Override
-    public void sendToHigherLayer() throws IOException {
+    public void sendToHigherLayer() throws IOException{
         byte[] bytesToSend = new byte[lenOfBytesToSend];
         ByteBuffer bytesToSendBuffer = ByteBuffer.wrap(bytesToSend);
         for (byte[] packet: dataPackets){
             bytesToSendBuffer.put(packet);
         }
         this.dataPackets.clear();
-        upwardLayer.getFromLowerLayer(bytesToSend, this.ipDestination, this.toPort);
+        upperLayer.getFromLowerLayer(bytesToSend, this.ipDestination, this.toPort);
     }
 
-    public void sendACKPacket(byte[] packetBytes, byte[] ipDestination, int port) throws IOException {
+    public void sendACKPacket(byte[] packetBytes, byte[] ipDestination, int port) throws IOException{
         sendToLowerLayer(packetBytes, ipDestination, port);
     }
 
@@ -179,7 +175,7 @@ public class TransportLayer implements Layer{
         return ackPacketHeader;
     }
 
-    public void sendMissedPacketNotice(byte[] packetBytes, byte[] ipDestination, int port) throws IOException {
+    public void sendMissedPacketNotice(byte[] packetBytes, byte[] ipDestination, int port) throws IOException{
         sendToLowerLayer(packetBytes, ipDestination, port);
     }
 
@@ -195,7 +191,7 @@ public class TransportLayer implements Layer{
         return resetConnectionMessage;
     }
 
-    public void sendResetMessage(byte[] packetBytes, byte[] ipDestination, int port) throws IOException {
+    public void sendResetMessage(byte[] packetBytes, byte[] ipDestination, int port) throws IOException{
         sendToLowerLayer(packetBytes, ipDestination, port);
     }
 }
