@@ -4,6 +4,13 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+
+/**
+ * Transport Layer
+ *
+ * @author Ludovic Boulanger
+ * @author Jordan Choquet
+ */
 public class TransportLayer implements Layer{
 
     int numOfFailures;
@@ -22,6 +29,17 @@ public class TransportLayer implements Layer{
     int numPacketsAcknowledged;
     int packetsSent;
 
+    byte[] ipSource;
+    int clientPort;
+
+    /**
+     * Constructor
+     *
+     * @param port
+     * @param upwardLayer
+     * @param getError
+     * @throws SocketException
+     */
     public TransportLayer(int port, Layer upwardLayer, String getError) throws SocketException {
         this.myPort = port;
         this.lowerLayer = new DataLinkLayer(myPort, this, getError);
@@ -33,6 +51,16 @@ public class TransportLayer implements Layer{
 
     }
 
+    /**
+     * Receives the data from the application layer
+     * and makes packet of 200 bytes, then sends it to
+     * the data link layer
+     *
+     * @param buffer
+     * @param ipDestination
+     * @param port
+     * @throws IOException
+     */
     @Override
     public void getFromHigherLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException{
         this.toPort = port;
@@ -44,11 +72,23 @@ public class TransportLayer implements Layer{
        sendToLowerLayer(buffer, ipDestination, this.toPort);
     }
 
+    /**
+     * Uses the method listen to wait for packet
+     *
+     * @throws IOException
+     */
     @Override
     public void listen(boolean setTimer) throws IOException {
         lowerLayer.listen(setTimer);
     }
 
+    /**
+     * Creates a packet with a header containing
+     * the number of the packer and total, and a body which
+     * contains the rest of the data
+     *
+     * @param numOfPackets
+     */
     public void createPackets(int numOfPackets){
         int counter = 0;
 
@@ -75,6 +115,13 @@ public class TransportLayer implements Layer{
         }
     }
 
+    /**
+     * Converts an integer to a string
+     *
+     * @param num
+     * @param maxChars
+     * @return
+     */
     public String intToStr(int num, int maxChars){
         String number = String.valueOf(num);
         while(number.length() < maxChars){
@@ -83,6 +130,17 @@ public class TransportLayer implements Layer{
         return number;
     }
 
+    /**
+     * Sends to the data link layer,
+     * checks which type of packet it is, if there is an error in the packet,
+     * will ask to resend the packet. After three bad packet, the transmission will start over
+     * If the packet is good, it will be sent to the lower layer.
+     *
+     * @param buffer
+     * @param ipDestination
+     * @param port
+     * @throws IOException
+     */
     @Override
     public void sendToLowerLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException{
         if(new String(buffer).split(",")[0].equals(ACKNOWLEDGEMESSAGE)) {
@@ -111,6 +169,15 @@ public class TransportLayer implements Layer{
         }
     }
 
+    /**
+     * Receives from the application layer
+     * If its a good packet, sends it to the application layer.
+     *
+     * @param buffer
+     * @param ipSource
+     * @param sourcePort
+     * @throws IOException
+     */
     @Override
     public void getFromLowerLayer(byte[] buffer, byte[] ipSource, int sourcePort) throws IOException{
         byte[] byteHeader = Arrays.copyOfRange(buffer,0,11);
@@ -153,6 +220,11 @@ public class TransportLayer implements Layer{
         }
     }
 
+    /**
+     * Send the the application layer
+     *
+     * @throws IOException
+     */
     @Override
     public void sendToHigherLayer() throws IOException{
         byte[] bytesToSend = new byte[lenOfBytesToSend];
@@ -164,10 +236,25 @@ public class TransportLayer implements Layer{
         upperLayer.getFromLowerLayer(bytesToSend, this.ipDestination, this.toPort);
     }
 
-    public void sendACKPacket(byte[] packetBytes, byte[] ipDestination, int port) throws IOException{
+    /**
+     * Sends an acknowledged packet
+     *
+     * @param packetBytes
+     * @param ipDestination
+     * @param port
+     * @throws IOException
+     */
+    public void sendACKPacket(byte[] packetBytes, byte[] ipDestination, int port) throws IOException {
         sendToLowerLayer(packetBytes, ipDestination, port);
     }
 
+    /**
+     * Creates an acknowledged packet, this will be used
+     * to confirmed that a packet has been well received
+     *
+     * @param packetNumber
+     * @return ackPacketHeader //returns the acknowledged packet created, type byte
+     */
     public byte[] createACKpacket(String packetNumber){
         String ackMessage = this.ACKNOWLEDGEMESSAGE;
         String ackPacketHeaderStr = ackMessage+','+packetNumber;
@@ -175,10 +262,25 @@ public class TransportLayer implements Layer{
         return ackPacketHeader;
     }
 
-    public void sendMissedPacketNotice(byte[] packetBytes, byte[] ipDestination, int port) throws IOException{
+    /**
+     * Sends a packet missed packet notice
+     * to the lower layer
+     *
+     * @param packetBytes
+     * @param ipDestination
+     * @param port
+     * @throws IOException
+     */
+    public void sendMissedPacketNotice(byte[] packetBytes, byte[] ipDestination, int port) throws IOException {
         sendToLowerLayer(packetBytes, ipDestination, port);
     }
 
+    /**
+     * Creates a packet containing the wrong packet's number
+     *
+     * @param packetNumber
+     * @return missedPacketNotice //returns the missed packet created, type byte
+     */
     public byte[] createMissedPacketNotice(String packetNumber){
         String missedPacketStr = this.RESENDMESSAGE;
         String packetHeaderStr = missedPacketStr+','+packetNumber;
@@ -186,12 +288,26 @@ public class TransportLayer implements Layer{
         return missedPacketHeader;
     }
 
+    /**
+     * Creates a packet that contains the message to terminate the
+     * program after the transmissions hits three missed packet
+     *
+     * @return resetConnectionMessage
+     */
     public byte[] createResetMessage(){
         byte[] resetConnectionMessage = TERMINATEMESSAGE.getBytes();
         return resetConnectionMessage;
     }
 
-    public void sendResetMessage(byte[] packetBytes, byte[] ipDestination, int port) throws IOException{
+    /**
+     * Sends the reset message to the lower layer
+     *
+     * @param packetBytes
+     * @param ipDestination
+     * @param port
+     * @throws IOException
+     */
+    public void sendResetMessage(byte[] packetBytes, byte[] ipDestination, int port) throws IOException {
         sendToLowerLayer(packetBytes, ipDestination, port);
     }
 }

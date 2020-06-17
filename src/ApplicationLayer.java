@@ -6,22 +6,40 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 
 
+/**
+ * Application layer
+ *
+ * @author Ludovic Boulanger
+ * @author Jordan Choquet
+ */
 
 public class ApplicationLayer implements Layer {
-
-    /**
-     *
-     */
 
     byte[] filePath;
     byte[] ipDestination;
     byte[] byteFile;
     Layer downwardLayer;
 
+    /**
+     * Constructor
+     *
+     * @param port
+     * @param getError
+     * @throws SocketException
+     */
     public ApplicationLayer(int port, String getError) throws SocketException {
         downwardLayer = new TransportLayer(port, this, getError);
     }
 
+    /**
+     * Sends to the transport layer
+     * 
+     *
+     * @param filePath
+     * @param ipDestination
+     * @param toPort
+     * @throws IOException
+     */
     @Override
     public void sendToLowerLayer(byte[] filePath, byte[] ipDestination, int toPort) throws IOException {
         this.filePath = filePath;
@@ -44,17 +62,41 @@ public class ApplicationLayer implements Layer {
         downwardLayer.getFromHigherLayer(bytesToSend, ipDestination, toPort);
     }
 
-    public void getIpAdressInBytes(String ipAdress, byte[] adress) {
+    /**
+     * Receives an address in string separated by '.',
+     * than splits on every '.' and converts it into int type
+     * and adds it to a byte array
+     *
+     * @param ipAdress
+     * @param adress
+     */
+    public void getIpAdressInBytes(String ipAdress, byte[] adress){
         String[] ipAdressDestination = ipAdress.split("\\.");
         for (int i = 0; i < 4; i++) {
             adress[i] = Integer.valueOf(ipAdressDestination[i]).byteValue();
         }
     }
 
+    /**
+     * Takes the file in string format and transfers it in bytes
+     *
+     * @param fileName
+     * @throws IOException
+     */
     public void getAllFileBytes(String fileName) throws IOException {
         this.byteFile = Files.readAllBytes(Paths.get(fileName));
     }
 
+    /**
+     * Receives packet from the transport layer and
+     * outputs the information in a file with a string format
+     * which is stored on the computer's repository
+     *
+     * @param buffer
+     * @param ipSource
+     * @param sourcePort
+     * @throws IOException
+     */
     @Override
     public void getFromLowerLayer(byte[] buffer, byte[] ipSource, int sourcePort) throws IOException {
         byte fileNameLength = buffer[0];
@@ -78,16 +120,31 @@ public class ApplicationLayer implements Layer {
         System.out.println("Done writing to file");
     }
 
+    /**
+     * There is no higher layer to be accessed
+     */
     @Override
     public void sendToHigherLayer() {
         System.err.println("Cannot send to a higher Layer");
     }
 
+    /**
+     * There is no higher layer to be accessed
+     *
+     * @param buffer
+     * @param ipDestination
+     * @param port
+     */
     @Override
     public void getFromHigherLayer(byte[] buffer, byte[] ipDestination, int port) {
         System.err.println("Cannot send to a higher Layer");
     }
 
+    /**
+     * Waits action to be taken from the lower layer
+     *
+     * @throws IOException
+     */
     @Override
     public void listen(boolean setTimer) throws IOException {
         downwardLayer.listen(setTimer);
