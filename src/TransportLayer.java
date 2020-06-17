@@ -53,7 +53,9 @@ public class TransportLayer implements Layer{
     }
 
     /**
-     *
+     * Receives the data from the application layer
+     * and makes packet of 200 bytes, then sends it to
+     * the data link layer
      *
      * @param buffer
      * @param ipDestination
@@ -82,7 +84,9 @@ public class TransportLayer implements Layer{
     }
 
     /**
-     * Creates packet containing maximum 200 bit
+     * Creates a packet with a header containing
+     * the number of the packer and total, and a body which
+     * contains the rest of the data
      *
      * @param numOfPackets
      */
@@ -127,6 +131,17 @@ public class TransportLayer implements Layer{
         return number;
     }
 
+    /**
+     * Sends to the data link layer,
+     * checks which type of packet it is, if there is an error in the packet,
+     * will ask to resend the packet. After three bad packet, the transmission will start over
+     * If the packet is good, it will be sent to the lower layer.
+     *
+     * @param buffer
+     * @param ipDestination
+     * @param port
+     * @throws IOException
+     */
     @Override
     public void sendToLowerLayer(byte[] buffer, byte[] ipDestination, int port) throws IOException {
         if(new String(buffer).split(",")[0].equals(ACKNOWLEDGEMESSAGE)) {
@@ -157,6 +172,9 @@ public class TransportLayer implements Layer{
     }
 
     /**
+     * Receives from the application layer
+     * If its a good packet, sends it to the application layer.
+     *
      * @param buffer
      * @param ipSource
      * @param sourcePort
@@ -204,6 +222,8 @@ public class TransportLayer implements Layer{
     }
 
     /**
+     * Send the the application layer
+     *
      * @throws IOException
      */
     @Override
@@ -257,8 +277,10 @@ public class TransportLayer implements Layer{
     }
 
     /**
+     * Creates a packet containing the wrong packet's number
+     *
      * @param packetNumber
-     * @return missedPacketNotice //returns the acknowledged packet created, type byte
+     * @return missedPacketNotice //returns the missed packet created, type byte
      */
     public byte[] createMissedPacketNotice(String packetNumber){
         String missedPacketStr = this.RESENDMESSAGE;

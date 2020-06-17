@@ -48,7 +48,8 @@ public class DataLinkLayer implements Layer{
 
     /**
      * Receives a buffer of the higher layer,
-     * which in this case is the transport layer.
+     * which is the transport layer, adds a crc
+     * and sends it to the other server's data link layer
      *
      * @param buffer
      * @param ipDestination
@@ -77,8 +78,9 @@ public class DataLinkLayer implements Layer{
     }
 
     /**
-     * Sends to the lower layor,
-     * which in this case is the Server's data link layer
+     * Sends to the lower layer,
+     * which in this case is the the
+     * other server's data link layer
      *
      * @param buffer
      * @param ipDestination
@@ -97,6 +99,7 @@ public class DataLinkLayer implements Layer{
 
     /**
      * Client is waiting for the packet to be sent
+     *
      * @throws IOException
      */
     @Override
@@ -118,7 +121,7 @@ public class DataLinkLayer implements Layer{
 
 
     /**
-     * Does not receive anything from the Server's Data link layer
+     * Is not used
      *
      * @param buffer
      * @throws IOException
@@ -132,7 +135,7 @@ public class DataLinkLayer implements Layer{
     /**
      * Sends to the transport layer
      * If the packet is corrupted the server will be
-     * put in the listening mode waiting to receive de
+     * put in the listening mode waiting to receive the
      * retransmission of the packet
      *
      * @throws IOException
@@ -166,9 +169,11 @@ public class DataLinkLayer implements Layer{
     }
 
     /**
+     * Verifies the CRC
+     *
      * @param crc
      * @param array
-     * @return
+     * @return true if the crc is right
      */
     public boolean checkCRC(byte crc, byte[] array){
         CRC32 crcToCheck = new CRC32();
@@ -210,8 +215,8 @@ public class DataLinkLayer implements Layer{
     }
 
     /**
-     * Random generator that has the odds on 2 to trigger an error
-     * on the fourth byte of a trame
+     * Random generator that when the odds hit
+     * changes the information of a byte in the packet
      *
      * @param arrayToChange
      * @return returns true if the odds are good
